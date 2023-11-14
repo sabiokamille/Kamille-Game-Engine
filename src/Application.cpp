@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "./Physics/Constants.h"
 
 bool Application::IsRunning() {
     return running;
@@ -10,7 +11,8 @@ bool Application::IsRunning() {
 void Application::Setup() {
     running = Graphics::OpenWindow();
 
-    particle = new Particle(50, 100, 1.0);
+    // TODDO: make this safer? using maybe a shared pointer or sumn
+    particle = new Particle(50, 100, 1.0, 10);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +38,43 @@ void Application::Input() {
 // Update function (called several times per second to update game objects)
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::Update() {
-    // TODO: update all objects in the scene
+    // Wait some time until we reach the target frame time in ms
+    static int timePrevFrame;
+    int waitTime = MILLISECS_PER_FRAME - (SDL_GetTicks() - timePrevFrame);
+    if (waitTime > 0) {
+        SDL_Delay(waitTime);
+    }
+
+    // Calculate the deltaTime in seconds
+    float deltaTime  = (SDL_GetTicks() - timePrevFrame) / 1000.0f;
+    if(deltaTime > 0.016) deltaTime = 0.016;
+
+    // Set the time of the current frame to be used in the next one;
+    timePrevFrame = SDL_GetTicks();
+    
+    // Proceed to update objects in the scene
+    particle->acceleration = Vec2(1.0 * PIXELS_PER_METER, 9.8 * PIXELS_PER_METER);
+
+    // Integrate the acceleration and the velocity to find the new position
+    particle->velocity += particle->acceleration * deltaTime;
+    particle->position += particle->velocity * deltaTime;
+
+    // TODO: Check the particle position and try to keep the particle inside the boundaries
+    // of the window
+    if ((particle->position.x + particle->radius) >= Graphics::windowWidth){
+        particle->velocity.x *= -0.9;
+        particle->position.x = Graphics::windowWidth - particle->radius;
+    } else if (particle->position.x - particle->radius <= 0 ) {
+        particle->velocity.x *= -0.9;
+        particle->position.x = particle->radius;
+    } 
+    if ((particle->position.y + particle->radius) >= Graphics::windowHeight ) {
+        particle->velocity.y *= -0.9;
+        particle->position.y = Graphics::windowHeight - particle->radius;
+    } else if(particle->position.y - particle->radius <= 0 ) {
+        particle->velocity.y *= -0.9;
+        particle->position.y = particle->radius;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -44,12 +82,12 @@ void Application::Update() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
     Graphics::ClearScreen(0xFF056236);
-    Graphics::DrawFillCircle(particle->position.x,particle->position.y,4,0xFFFFFFFF);
+    Graphics::DrawFillCircle(particle->position.x,particle->position.y,particle->radius,0xFFFFFFFF);
     Graphics::RenderFrame();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// Destrot function to delete objects and close the window
+// Destroy function to delete objects and close the window
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::Destroy() {
     delete particle;
