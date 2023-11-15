@@ -14,6 +14,7 @@ struct Particle {
 
     Particle(float x, float y, float mass, int radius);
     ~Particle();
+    void Integrate(float dt);
 };
 
 #endif

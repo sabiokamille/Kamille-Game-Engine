@@ -53,11 +53,10 @@ void Application::Update() {
     timePrevFrame = SDL_GetTicks();
     
     // Proceed to update objects in the scene
-    particle->acceleration = Vec2(1.0 * PIXELS_PER_METER, 9.8 * PIXELS_PER_METER);
+    particle->acceleration = Vec2(2.0 * PIXELS_PER_METER, 9.8 * PIXELS_PER_METER);
 
     // Integrate the acceleration and the velocity to find the new position
-    particle->velocity += particle->acceleration * deltaTime;
-    particle->position += particle->velocity * deltaTime;
+    particle->Integrate(deltaTime);
 
     // TODO: Check the particle position and try to keep the particle inside the boundaries
     // of the window
