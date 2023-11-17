@@ -10,10 +10,16 @@ struct Particle {
     Vec2 velocity;
     Vec2 acceleration;
 
+    Vec2 netForce;
+
     float mass;
 
     Particle(float x, float y, float mass, int radius);
     ~Particle();
+
+    void AddForce(const Vec2& force);
+    void ClearForces();
+
     void Integrate(float dt);
 };
 
