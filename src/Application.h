@@ -9,6 +9,10 @@ class Application {
     private:
         bool running = false;
         std::vector<Particle*> particles;
+        Vec2 pushForce = Vec2(0,0);
+
+        // TODO: create a fluid to put on screen
+        SDL_Rect fluid;
 
     public:
         Application() = default;
