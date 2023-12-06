@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "./Physics/Constants.h"
 #include "./Physics/Vec2.h"
+#include "./Physics/Force.h"
 
 bool Application::IsRunning() {
     return running;
@@ -16,8 +17,13 @@ void Application::Setup() {
     Particle* smallBall = new Particle(50, 100, 1.0, 10);
     particles.push_back(smallBall);
 
-    Particle* bigBall = new Particle(Graphics::windowWidth - 50, 100, 3.0, 20);
-    particles.push_back(bigBall);
+    // Particle* bigBall = new Particle(Graphics::windowWidth - 50, 100, 3.0, 20);
+    // particles.push_back(bigBall);
+
+    fluid.x = 0;
+    fluid.y = Graphics::Height() / 2;
+    fluid.w = Graphics::Width();
+    fluid.h = Graphics::Height()/2;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -33,8 +39,34 @@ void Application::Input() {
             case SDL_KEYDOWN:
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     running = false;
-                    break;
                 }
+                if (event.key.keysym.sym == SDLK_UP) {
+                    pushForce.y = -50 * PIXELS_PER_METER;
+                }
+                if (event.key.keysym.sym == SDLK_RIGHT) {
+                    pushForce.x = 50 * PIXELS_PER_METER;
+                }
+                if (event.key.keysym.sym == SDLK_DOWN) {
+                    pushForce.y = 50 * PIXELS_PER_METER;
+                }
+                if (event.key.keysym.sym == SDLK_LEFT) {
+                    pushForce.x = -50 * PIXELS_PER_METER;
+                }
+                    break;
+            case SDL_KEYUP:
+                if (event.key.keysym.sym == SDLK_UP) {
+                    pushForce.y = 0;
+                }
+                if (event.key.keysym.sym == SDLK_RIGHT) {
+                    pushForce.x = 0;
+                }
+                if (event.key.keysym.sym == SDLK_DOWN) {
+                    pushForce.y = 0;
+                }
+                if (event.key.keysym.sym == SDLK_LEFT) {
+                    pushForce.x = 0;
+                }
+                break;
         }
     }
 }
@@ -56,17 +88,22 @@ void Application::Update() {
 
     // Set the time of the current frame to be used in the next one;
     timePrevFrame = SDL_GetTicks();
-    
-    // Apply a "wind" force to my particles
+
+    // Apply forces to my particles
     for (auto particle : particles) {
+        // Wind force
         Vec2 wind = Vec2(1.0 * PIXELS_PER_METER, 0.0 * PIXELS_PER_METER);
         particle->AddForce(wind);
-    }
-
-    // Apply a weight force to my particles
-    for (auto particle : particles) {
+        // Weight force
         Vec2 weight = Vec2(0.0 * PIXELS_PER_METER, 9.8 * PIXELS_PER_METER * particle->mass);
         particle->AddForce(weight);
+        // Push force
+        particle->AddForce(pushForce);
+        // TODO: Apply a drag force if particle is inside the fluid
+        if (particle->position.y >= fluid.y) {
+            Vec2 drag = Force::GenerateDragForce(*particle, 0.01);
+            particle->AddForce(drag);
+        }
     }
 
     // Integrate the acceleration and the velocity to find the new position
@@ -98,7 +135,10 @@ void Application::Update() {
 // Render function (called several times per second to draw objects)
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
-    Graphics::ClearScreen(0xFF056236);
+    Graphics::ClearScreen(0xFFA1D2E6);
+
+    // Draw the fluid in
+    Graphics::DrawFillRect(fluid.x + fluid.w/2, fluid.y + fluid.h/2,fluid.w, fluid.h, 0xFF968035);
     for (auto particle : particles) {
         Graphics::DrawFillCircle(particle->position.x,particle->position.y,particle->radius,0xFFFFFFFF);
     }
