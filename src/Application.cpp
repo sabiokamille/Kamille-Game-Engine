@@ -2,6 +2,7 @@
 #include "./Physics/Constants.h"
 #include "./Physics/Vec2.h"
 #include "./Physics/Force.h"
+#include <iostream>
 
 bool Application::IsRunning() {
     return running;
@@ -14,11 +15,11 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     // TODDO: make this safer? using maybe a shared pointer or sumn
-    Particle* smallBall = new Particle(50, 100, 1.0, 10);
+    Particle* smallBall = new Particle(50, 100, 1.0, 15);
     particles.push_back(smallBall);
 
-    // Particle* bigBall = new Particle(Graphics::windowWidth - 50, 100, 3.0, 20);
-    // particles.push_back(bigBall);
+    Particle* bigBall = new Particle(Graphics::windowWidth - 50, 100, 3.0, 20);
+    particles.push_back(bigBall);
 
     fluid.x = 0;
     fluid.y = Graphics::Height() / 2;
@@ -67,6 +68,14 @@ void Application::Input() {
                     pushForce.x = 0;
                 }
                 break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.button == SDL_BUTTON_LEFT && event.button.state == SDL_PRESSED) {
+                    // std::cout << "x-coordinate: " << event.button.x << std::endl;
+                    // std::cout << "y-coordinate: " << event.button.y << std::endl;
+                    
+                    Particle* newParticle = new Particle(event.button.x, event.button.y, 1.0, 10);
+                    particles.push_back(newParticle);
+                }
         }
     }
 }
@@ -91,19 +100,28 @@ void Application::Update() {
 
     // Apply forces to my particles
     for (auto particle : particles) {
-        // Wind force
-        Vec2 wind = Vec2(1.0 * PIXELS_PER_METER, 0.0 * PIXELS_PER_METER);
-        particle->AddForce(wind);
+        // Wind force if particle is not inside the fluid
+        // if (particle->position.y < fluid.y) {
+        //     Vec2 wind = Vec2(1.0 * PIXELS_PER_METER, 0.0 * PIXELS_PER_METER);
+        //     particle->AddForce(wind);
+        // }
+
         // Weight force
-        Vec2 weight = Vec2(0.0 * PIXELS_PER_METER, 9.8 * PIXELS_PER_METER * particle->mass);
-        particle->AddForce(weight);
+        // Vec2 weight = Vec2(0.0 * PIXELS_PER_METER, 9.8 * PIXELS_PER_METER * particle->mass);
+        // particle->AddForce(weight);
+
         // Push force
         particle->AddForce(pushForce);
-        // TODO: Apply a drag force if particle is inside the fluid
-        if (particle->position.y >= fluid.y) {
-            Vec2 drag = Force::GenerateDragForce(*particle, 0.01);
-            particle->AddForce(drag);
-        }
+
+        // Apply a friction force
+        Vec2 friction = Force::GenerateFrictionForce(*particle, 10.0 * PIXELS_PER_METER);
+        particle->AddForce(friction);
+
+        // Apply a drag force if particle is inside the fluid
+        // if (particle->position.y >= fluid.y) {
+        //     Vec2 drag = Force::GenerateDragForce(*particle, 0.04);
+        //     particle->AddForce(drag);
+        // }
     }
 
     // Integrate the acceleration and the velocity to find the new position

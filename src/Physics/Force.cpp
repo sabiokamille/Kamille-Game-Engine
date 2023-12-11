@@ -15,3 +15,15 @@ Vec2 Force::GenerateDragForce(const Particle& particle, float k) {
     }
     return dragForce;
 }
+
+Vec2 Force::GenerateFrictionForce(const Particle& particle, float k) {
+    Vec2 frictionForce = Vec2(0,0);
+
+    // Calculate the friction direction (inverse of the velocity unit vector)
+    Vec2 frictionDirection = particle.velocity.UnitVector() * -1.0;
+
+    // Calculate the friction force
+    frictionForce = frictionDirection * k;
+
+    return frictionForce;
+}
