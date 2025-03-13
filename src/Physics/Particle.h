@@ -13,7 +13,7 @@ struct Particle {
     Vec2 netForce;
 
     float mass;
-    float invMass; //store inverse of the mass because most calculations with mass actually require the inverse of the mass
+    float InvMass;
 
     Particle(float x, float y, float mass, int radius);
     ~Particle();

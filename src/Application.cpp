@@ -15,11 +15,15 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     // TODDO: make this safer? using maybe a shared pointer or sumn
-    Particle* smallBall = new Particle(50, 100, 1.0, 15);
-    particles.push_back(smallBall);
+    // Particle* smallBall = new Particle(500, 500, 1.0, 15);
+    // particles.push_back(smallBall);
 
-    Particle* bigBall = new Particle(Graphics::windowWidth - 50, 100, 3.0, 20);
-    particles.push_back(bigBall);
+    // Particle* bigBall = new Particle(Graphics::windowWidth - 500, 100, 3.0, 20);
+    // particles.push_back(bigBall);
+
+    for (int i = 1; i < 6; i++) {
+        particles.push_back(new Particle(400 * i, 700, 1.0 * i, 15));
+    }
 
     fluid.x = 0;
     fluid.y = Graphics::Height() / 2;
@@ -73,7 +77,7 @@ void Application::Input() {
                     // std::cout << "x-coordinate: " << event.button.x << std::endl;
                     // std::cout << "y-coordinate: " << event.button.y << std::endl;
                     
-                    Particle* newParticle = new Particle(event.button.x, event.button.y, 1.0, 10);
+                    Particle* newParticle = new Particle(event.button.x, event.button.y, 3.0, 30);
                     particles.push_back(newParticle);
                 }
         }
@@ -107,22 +111,39 @@ void Application::Update() {
         // }
 
         // Weight force
-        // Vec2 weight = Vec2(0.0 * PIXELS_PER_METER, 9.8 * PIXELS_PER_METER * particle->mass);
+        // Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * particle->mass);
         // particle->AddForce(weight);
 
         // Push force
         particle->AddForce(pushForce);
 
         // Apply a friction force
-        Vec2 friction = Force::GenerateFrictionForce(*particle, 10.0 * PIXELS_PER_METER);
-        particle->AddForce(friction);
+        // Vec2 friction = Force::GenerateFrictionForce(*particle, 10.0 * PIXELS_PER_METER);
+        // particle->AddForce(friction);
 
         // Apply a drag force if particle is inside the fluid
-        // if (particle->position.y >= fluid.y) {
-        //     Vec2 drag = Force::GenerateDragForce(*particle, 0.04);
-        //     particle->AddForce(drag);
-        // }
+        if (particle->position.y >= fluid.y) {
+            Vec2 drag = Force::GenerateDragForce(*particle, 0.01);
+            particle->AddForce(drag);
+        } else {
+            Vec2 drag = Force::GenerateDragForce(*particle, 0.01);
+            particle->AddForce(drag);
+        }
     }
+
+    // //Apply gravitational attraction force
+    // Vec2 gravitationalAttractionForce = Force::GenerateAttractionForce(*particles[0],*particles[1], 1000.0 );
+    // particles[0]->AddForce(gravitationalAttractionForce);
+    // particles[1]->AddForce(-gravitationalAttractionForce);
+
+    // Apply a spring force to each particle
+    for (int i = 1; i < particles.size(); i++) {
+        Vec2 springForce = Force::GenerateSpringForce(*particles[i], particles[i-1]->position, 150, 10);
+         particles[i]->AddForce(springForce);
+         particles[i-1]->AddForce(-springForce);
+    }
+    
+   
 
     // Integrate the acceleration and the velocity to find the new position
     for (auto particle : particles) {
@@ -155,11 +176,27 @@ void Application::Update() {
 void Application::Render() {
     Graphics::ClearScreen(0xFFA1D2E6);
 
-    // Draw the fluid in
-    Graphics::DrawFillRect(fluid.x + fluid.w/2, fluid.y + fluid.h/2,fluid.w, fluid.h, 0xFF968035);
-    for (auto particle : particles) {
-        Graphics::DrawFillCircle(particle->position.x,particle->position.y,particle->radius,0xFFFFFFFF);
+    // Draw the fluid in the screen
+    // Graphics::DrawFillRect(fluid.x + fluid.w/2, fluid.y + fluid.h/2,fluid.w, fluid.h, 0xFF6E3712);
+
+    //Draw the anchor for the spring on the screen
+    // Graphics::DrawFillRect(500, 100,50,10, 0xFF7D7D7D);
+
+    //Draw the spring connecting the anchor to the particle (bob)
+    // Graphics::DrawLine(500,105,particles[0]->position.x, particles[0]->position.y, 0xFF000000);
+
+    //Draw the spring connections between particles
+    for (int i = 1; i < particles.size(); i++) {
+            Graphics::DrawLine(particles[i]->position.x,particles[i]->position.y,particles[i-1]->position.x, particles[i-1]->position.y, 0xFF000000);
     }
+
+    //Draw each particle on the screen
+    for( auto particle : particles) {
+        Graphics::DrawFillCircle(particle->position.x,particle->position.y,particle->radius,0xFFFFFFFF);
+        
+    }
+
+    
     Graphics::RenderFrame();
 }
 
