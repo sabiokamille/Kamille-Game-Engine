@@ -1,22 +1,27 @@
-#ifndef PARTICLE_H
-#define PARTICLE_H
+#ifndef BODY_H
+#define BODY_H
 #include "Vec2.h"
 
 // TODO:
-struct Particle {
+struct Body {
     int radius;
 
     Vec2 position;
     Vec2 velocity;
     Vec2 acceleration;
 
+    float angle;
+
     Vec2 netForce;
 
     float mass;
     float InvMass;
 
-    Particle(float x, float y, float mass, int radius);
-    ~Particle();
+    // A pointer to the geometry shape of the rigid body (circle, box, polygon, etc)
+    Body* body = NULL;
+
+    Body(float x, float y, float mass, int radius);
+    ~Body();
 
     void AddForce(const Vec2& force);
     void ClearForces();

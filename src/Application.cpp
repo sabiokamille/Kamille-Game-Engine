@@ -15,14 +15,14 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     // TODDO: make this safer? using maybe a shared pointer or sumn
-    // Particle* smallBall = new Particle(500, 500, 1.0, 15);
-    // particles.push_back(smallBall);
+    // Body* smallBall = new Body(500, 500, 1.0, 15);
+    // bodies.push_back(smallBall);
 
-    // Particle* bigBall = new Particle(Graphics::windowWidth - 500, 100, 3.0, 20);
-    // particles.push_back(bigBall);
+    // Body* bigBall = new Body(Graphics::windowWidth - 500, 100, 3.0, 20);
+    // bodies.push_back(bigBall);
 
     for (int i = 1; i < 6; i++) {
-        particles.push_back(new Particle(400 * i, 700, 1.0 * i, 15));
+        bodies.push_back(new Body(400 * i, 700, 1.0 * i, 15));
     }
 
     fluid.x = 0;
@@ -77,8 +77,8 @@ void Application::Input() {
                     // std::cout << "x-coordinate: " << event.button.x << std::endl;
                     // std::cout << "y-coordinate: " << event.button.y << std::endl;
                     
-                    Particle* newParticle = new Particle(event.button.x, event.button.y, 3.0, 30);
-                    particles.push_back(newParticle);
+                    Body* newBody = new Body(event.button.x, event.button.y, 3.0, 30);
+                    bodies.push_back(newBody);
                 }
         }
     }
@@ -102,70 +102,70 @@ void Application::Update() {
     // Set the time of the current frame to be used in the next one;
     timePrevFrame = SDL_GetTicks();
 
-    // Apply forces to my particles
-    for (auto particle : particles) {
-        // Wind force if particle is not inside the fluid
-        // if (particle->position.y < fluid.y) {
+    // Apply forces to my bodies
+    for (auto Body : bodies) {
+        // Wind force if Body is not inside the fluid
+        // if (Body->position.y < fluid.y) {
         //     Vec2 wind = Vec2(1.0 * PIXELS_PER_METER, 0.0 * PIXELS_PER_METER);
-        //     particle->AddForce(wind);
+        //     Body->AddForce(wind);
         // }
 
         // Weight force
-        // Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * particle->mass);
-        // particle->AddForce(weight);
+        // Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * Body->mass);
+        // Body->AddForce(weight);
 
         // Push force
-        particle->AddForce(pushForce);
+        Body->AddForce(pushForce);
 
         // Apply a friction force
-        // Vec2 friction = Force::GenerateFrictionForce(*particle, 10.0 * PIXELS_PER_METER);
-        // particle->AddForce(friction);
+        // Vec2 friction = Force::GenerateFrictionForce(*Body, 10.0 * PIXELS_PER_METER);
+        // Body->AddForce(friction);
 
-        // Apply a drag force if particle is inside the fluid
-        if (particle->position.y >= fluid.y) {
-            Vec2 drag = Force::GenerateDragForce(*particle, 0.01);
-            particle->AddForce(drag);
+        // Apply a drag force if Body is inside the fluid
+        if (Body->position.y >= fluid.y) {
+            Vec2 drag = Force::GenerateDragForce(*Body, 0.01);
+            Body->AddForce(drag);
         } else {
-            Vec2 drag = Force::GenerateDragForce(*particle, 0.01);
-            particle->AddForce(drag);
+            Vec2 drag = Force::GenerateDragForce(*Body, 0.01);
+            Body->AddForce(drag);
         }
     }
 
     // //Apply gravitational attraction force
-    // Vec2 gravitationalAttractionForce = Force::GenerateAttractionForce(*particles[0],*particles[1], 1000.0 );
-    // particles[0]->AddForce(gravitationalAttractionForce);
-    // particles[1]->AddForce(-gravitationalAttractionForce);
+    // Vec2 gravitationalAttractionForce = Force::GenerateAttractionForce(*bodies[0],*bodies[1], 1000.0 );
+    // bodies[0]->AddForce(gravitationalAttractionForce);
+    // bodies[1]->AddForce(-gravitationalAttractionForce);
 
-    // Apply a spring force to each particle
-    for (int i = 1; i < particles.size(); i++) {
-        Vec2 springForce = Force::GenerateSpringForce(*particles[i], particles[i-1]->position, 150, 10);
-         particles[i]->AddForce(springForce);
-         particles[i-1]->AddForce(-springForce);
+    // Apply a spring force to each Body
+    for (int i = 1; i < bodies.size(); i++) {
+        Vec2 springForce = Force::GenerateSpringForce(*bodies[i], bodies[i-1]->position, 150, 10);
+         bodies[i]->AddForce(springForce);
+         bodies[i-1]->AddForce(-springForce);
     }
     
    
 
     // Integrate the acceleration and the velocity to find the new position
-    for (auto particle : particles) {
-        particle->Integrate(deltaTime);
+    for (auto Body : bodies) {
+        Body->Integrate(deltaTime);
     }
 
-    // TODO: Check the particle position and try to keep the particle inside the boundaries
+    // TODO: Check the Body position and try to keep the Body inside the boundaries
     // of the window
-    for (auto particle : particles) {
-        if ((particle->position.x + particle->radius) >= Graphics::windowWidth){
-            particle->velocity.x *= -0.9;
-            particle->position.x = Graphics::windowWidth - particle->radius;
-        } else if (particle->position.x - particle->radius <= 0 ) {
-            particle->velocity.x *= -0.9;
-            particle->position.x = particle->radius;
+    for (auto Body : bodies) {
+        if ((Body->position.x + Body->radius) >= Graphics::windowWidth){
+            Body->velocity.x *= -0.9;
+            Body->position.x = Graphics::windowWidth - Body->radius;
+        } else if (Body->position.x - Body->radius <= 0 ) {
+            Body->velocity.x *= -0.9;
+            Body->position.x = Body->radius;
         } 
-        if ((particle->position.y + particle->radius) >= Graphics::windowHeight ) {
-            particle->velocity.y *= -0.9;
-            particle->position.y = Graphics::windowHeight - particle->radius;
-        } else if(particle->position.y - particle->radius <= 0 ) {
-            particle->velocity.y *= -0.9;
-            particle->position.y = particle->radius;
+        if ((Body->position.y + Body->radius) >= Graphics::windowHeight ) {
+            Body->velocity.y *= -0.9;
+            Body->position.y = Graphics::windowHeight - Body->radius;
+        } else if(Body->position.y - Body->radius <= 0 ) {
+            Body->velocity.y *= -0.9;
+            Body->position.y = Body->radius;
         }
     }
 }
@@ -182,17 +182,17 @@ void Application::Render() {
     //Draw the anchor for the spring on the screen
     // Graphics::DrawFillRect(500, 100,50,10, 0xFF7D7D7D);
 
-    //Draw the spring connecting the anchor to the particle (bob)
-    // Graphics::DrawLine(500,105,particles[0]->position.x, particles[0]->position.y, 0xFF000000);
+    //Draw the spring connecting the anchor to the Body (bob)
+    // Graphics::DrawLine(500,105,bodies[0]->position.x, bodies[0]->position.y, 0xFF000000);
 
-    //Draw the spring connections between particles
-    for (int i = 1; i < particles.size(); i++) {
-            Graphics::DrawLine(particles[i]->position.x,particles[i]->position.y,particles[i-1]->position.x, particles[i-1]->position.y, 0xFF000000);
+    //Draw the spring connections between bodies
+    for (int i = 1; i < bodies.size(); i++) {
+            Graphics::DrawLine(bodies[i]->position.x,bodies[i]->position.y,bodies[i-1]->position.x, bodies[i-1]->position.y, 0xFF000000);
     }
 
-    //Draw each particle on the screen
-    for( auto particle : particles) {
-        Graphics::DrawFillCircle(particle->position.x,particle->position.y,particle->radius,0xFFFFFFFF);
+    //Draw each Body on the screen
+    for( auto Body : bodies) {
+        Graphics::DrawFillCircle(Body->position.x,Body->position.y,Body->radius,0xFFFFFFFF);
         
     }
 
@@ -204,8 +204,8 @@ void Application::Render() {
 // Destroy function to delete objects and close the window
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::Destroy() {
-    for(auto particle : particles) {
-        delete particle;
+    for(auto Body : bodies) {
+        delete Body;
     }
 
     Graphics::CloseWindow();
