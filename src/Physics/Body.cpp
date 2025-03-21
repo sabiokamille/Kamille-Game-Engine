@@ -1,7 +1,8 @@
 #include "Body.h"
 #include <iostream>
 
-Body::Body(float x, float y, float mass, int radius) {
+Body::Body(const Shape& shape, float x, float y, float mass, int radius) {
+    this->shape = shape.Clone();
     this->radius = radius;
     this->position = Vec2(x,y);
     this->mass = mass;
@@ -15,6 +16,7 @@ Body::Body(float x, float y, float mass, int radius) {
 }
 
 Body::~Body() {
+    delete shape;
     std::cout << "Body destructor called!" << std::endl;
 }
 

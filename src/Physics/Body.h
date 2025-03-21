@@ -1,6 +1,9 @@
 #ifndef BODY_H
 #define BODY_H
+
+
 #include "Vec2.h"
+#include "Shape.h"
 
 // TODO:
 struct Body {
@@ -18,9 +21,9 @@ struct Body {
     float InvMass;
 
     // A pointer to the geometry shape of the rigid body (circle, box, polygon, etc)
-    Body* body = NULL;
+    Shape* shape = NULL;
 
-    Body(float x, float y, float mass, int radius);
+    Body(const Shape& shape, float x, float y, float mass, int radius);
     ~Body();
 
     void AddForce(const Vec2& force);

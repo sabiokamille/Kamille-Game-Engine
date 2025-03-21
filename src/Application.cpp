@@ -15,15 +15,15 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     // TODDO: make this safer? using maybe a shared pointer or sumn
-    // Body* smallBall = new Body(500, 500, 1.0, 15);
-    // bodies.push_back(smallBall);
+    Body* smallBall = new Body(CircleShape(50),500, 500, 1.0, 15);
+    bodies.push_back(smallBall);
 
     // Body* bigBall = new Body(Graphics::windowWidth - 500, 100, 3.0, 20);
     // bodies.push_back(bigBall);
 
-    for (int i = 1; i < 6; i++) {
-        bodies.push_back(new Body(400 * i, 700, 1.0 * i, 15));
-    }
+    // for (int i = 1; i < 6; i++) {
+    //     bodies.push_back(new Body(400 * i, 700, 1.0 * i, 15));
+    // }
 
     fluid.x = 0;
     fluid.y = Graphics::Height() / 2;
@@ -77,7 +77,7 @@ void Application::Input() {
                     // std::cout << "x-coordinate: " << event.button.x << std::endl;
                     // std::cout << "y-coordinate: " << event.button.y << std::endl;
                     
-                    Body* newBody = new Body(event.button.x, event.button.y, 3.0, 30);
+                    Body* newBody = new Body(CircleShape(50),event.button.x, event.button.y, 3.0, 30);
                     bodies.push_back(newBody);
                 }
         }
