@@ -21,9 +21,14 @@ void Application::Setup() {
     // Particle* bigBall = new Particle(Graphics::windowWidth - 500, 100, 3.0, 20);
     // particles.push_back(bigBall);
 
-    for (int i = 1; i < 6; i++) {
-        particles.push_back(new Particle(400 * i, 700, 1.0 * i, 15));
-    }
+    // for (int i = 1; i < 5; i++) {
+    //     particles.push_back(new Particle((400 + 25 * (i % 2)), (700 + 25 * (i % 2)), 1.0 * i, 15));
+    // }
+
+    particles.push_back(new Particle(400,700,1.0,15));
+    particles.push_back(new Particle(500,700,1.0,15));
+    particles.push_back(new Particle(500,800, 1.0,15));
+    particles.push_back(new Particle(400,800,1.0,15));
 
     fluid.x = 0;
     fluid.y = Graphics::Height() / 2;
@@ -137,10 +142,12 @@ void Application::Update() {
     // particles[1]->AddForce(-gravitationalAttractionForce);
 
     // Apply a spring force to each particle
-    for (int i = 1; i < particles.size(); i++) {
-        Vec2 springForce = Force::GenerateSpringForce(*particles[i], particles[i-1]->position, 150, 10);
+    for (int i = (particles.size() - 1); i > 0; i--) {
+        for (int j = 0; j < i; j++) {
+        Vec2 springForce = Force::GenerateSpringForce(*particles[i], particles[j]->position, 150, 10);
          particles[i]->AddForce(springForce);
-         particles[i-1]->AddForce(-springForce);
+         particles[j]->AddForce(-springForce);
+        }
     }
     
    
@@ -186,9 +193,12 @@ void Application::Render() {
     // Graphics::DrawLine(500,105,particles[0]->position.x, particles[0]->position.y, 0xFF000000);
 
     //Draw the spring connections between particles
-    for (int i = 1; i < particles.size(); i++) {
-            Graphics::DrawLine(particles[i]->position.x,particles[i]->position.y,particles[i-1]->position.x, particles[i-1]->position.y, 0xFF000000);
+    for (int i = (particles.size() - 1); i > 0; i--) {
+        for (int j = 0; j < i; j++) {
+            Graphics::DrawLine(particles[i]->position.x,particles[i]->position.y,particles[j]->position.x, particles[j]->position.y, 0xFF000000);
+        }
     }
+            
 
     //Draw each particle on the screen
     for( auto particle : particles) {
