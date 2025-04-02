@@ -70,7 +70,7 @@ float Vec2::Cross(const Vec2& v) const {
 	return (x * v.y) - (y * v.x);
 }
 
-Vec2& Vec2::operator = (const Vec2& v) {
+Vec2& Vec2::operator = (const Vec2& v){
 	x = v.x;
 	y = v.y;
 	return *this;

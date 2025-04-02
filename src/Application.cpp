@@ -15,7 +15,7 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     // TODDO: make this safer? using maybe a shared pointer or sumn
-    Body* smallBall = new Body(CircleShape(50),500, 500, 1.0, 15);
+    Body* smallBall = new Body(CircleShape(50),500, 500, 1.0);
     bodies.push_back(smallBall);
 
     // Body* bigBall = new Body(Graphics::windowWidth - 500, 100, 3.0, 20);
@@ -77,7 +77,7 @@ void Application::Input() {
                     // std::cout << "x-coordinate: " << event.button.x << std::endl;
                     // std::cout << "y-coordinate: " << event.button.y << std::endl;
                     
-                    Body* newBody = new Body(CircleShape(50),event.button.x, event.button.y, 3.0, 30);
+                    Body* newBody = new Body(CircleShape(50),event.button.x, event.button.y, 3.0);
                     bodies.push_back(newBody);
                 }
         }
@@ -111,8 +111,12 @@ void Application::Update() {
         // }
 
         // Weight force
-        // Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * Body->mass);
+        Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * Body->mass);
         // Body->AddForce(weight);
+
+        // Torque force
+        float torque = 20;
+        Body->AddTorque(torque);
 
         // Push force
         Body->AddForce(pushForce);
@@ -122,13 +126,13 @@ void Application::Update() {
         // Body->AddForce(friction);
 
         // Apply a drag force if Body is inside the fluid
-        if (Body->position.y >= fluid.y) {
-            Vec2 drag = Force::GenerateDragForce(*Body, 0.01);
-            Body->AddForce(drag);
-        } else {
-            Vec2 drag = Force::GenerateDragForce(*Body, 0.01);
-            Body->AddForce(drag);
-        }
+        // if (Body->position.y >= fluid.y) {
+        //     Vec2 drag = Force::GenerateDragForce(*Body, 0.01);
+        //     Body->AddForce(drag);
+        // } else {
+        //     Vec2 drag = Force::GenerateDragForce(*Body, 0.01);
+        //     Body->AddForce(drag);
+        // }
     }
 
     // //Apply gravitational attraction force
@@ -137,35 +141,36 @@ void Application::Update() {
     // bodies[1]->AddForce(-gravitationalAttractionForce);
 
     // Apply a spring force to each Body
-    for (int i = 1; i < bodies.size(); i++) {
-        Vec2 springForce = Force::GenerateSpringForce(*bodies[i], bodies[i-1]->position, 150, 10);
-         bodies[i]->AddForce(springForce);
-         bodies[i-1]->AddForce(-springForce);
-    }
-    
-   
+    // for (int i = 1; i < bodies.size(); i++) {
+    //     Vec2 springForce = Force::GenerateSpringForce(*bodies[i], bodies[i-1]->position, 150, 10);
+    //      bodies[i]->AddForce(springForce);
+    //      bodies[i-1]->AddForce(-springForce);
+    // }
 
     // Integrate the acceleration and the velocity to find the new position
     for (auto Body : bodies) {
-        Body->Integrate(deltaTime);
+        Body->Update(deltaTime);
     }
 
     // TODO: Check the Body position and try to keep the Body inside the boundaries
     // of the window
     for (auto Body : bodies) {
-        if ((Body->position.x + Body->radius) >= Graphics::windowWidth){
+        if (Body->shape->GetType() == CIRCLE) {
+            CircleShape* circleShape = (CircleShape*) Body->shape;
+            if ((Body->position.x + circleShape->radius) >= Graphics::windowWidth){
             Body->velocity.x *= -0.9;
-            Body->position.x = Graphics::windowWidth - Body->radius;
-        } else if (Body->position.x - Body->radius <= 0 ) {
+            Body->position.x = Graphics::windowWidth - circleShape->radius;
+            } else if (Body->position.x - circleShape->radius <= 0 ) {
             Body->velocity.x *= -0.9;
-            Body->position.x = Body->radius;
-        } 
-        if ((Body->position.y + Body->radius) >= Graphics::windowHeight ) {
+            Body->position.x = circleShape->radius;
+            } 
+            if ((Body->position.y + circleShape->radius) >= Graphics::windowHeight ) {
             Body->velocity.y *= -0.9;
-            Body->position.y = Graphics::windowHeight - Body->radius;
-        } else if(Body->position.y - Body->radius <= 0 ) {
-            Body->velocity.y *= -0.9;
-            Body->position.y = Body->radius;
+            Body->position.y = Graphics::windowHeight - circleShape->radius;
+            } else if(Body->position.y - circleShape->radius <= 0 ) {
+                Body->velocity.y *= -0.9;
+                Body->position.y = circleShape->radius;
+            }
         }
     }
 }
@@ -179,24 +184,20 @@ void Application::Render() {
     // Draw the fluid in the screen
     // Graphics::DrawFillRect(fluid.x + fluid.w/2, fluid.y + fluid.h/2,fluid.w, fluid.h, 0xFF6E3712);
 
-    //Draw the anchor for the spring on the screen
-    // Graphics::DrawFillRect(500, 100,50,10, 0xFF7D7D7D);
-
-    //Draw the spring connecting the anchor to the Body (bob)
-    // Graphics::DrawLine(500,105,bodies[0]->position.x, bodies[0]->position.y, 0xFF000000);
-
-    //Draw the spring connections between bodies
-    for (int i = 1; i < bodies.size(); i++) {
-            Graphics::DrawLine(bodies[i]->position.x,bodies[i]->position.y,bodies[i-1]->position.x, bodies[i-1]->position.y, 0xFF000000);
-    }
-
     //Draw each Body on the screen
     for( auto Body : bodies) {
-        Graphics::DrawFillCircle(Body->position.x,Body->position.y,Body->radius,0xFFFFFFFF);
+        if (Body->shape->GetType() == CIRCLE) {
+            CircleShape* circleShape = (CircleShape*) Body->shape;
+            Graphics::DrawCircle(Body->position.x,Body->position.y,circleShape->radius,Body->rotation, 0xFFFFFFFF);
+        } else if (Body->shape->GetType() == BOX) {
+            BoxShape* boxShape = (BoxShape*) Body->shape;
+            Graphics::DrawPolygon(Body->position.x, Body->position.y, boxShape->worldVertices, 0xFFFFFFFF );
+        } else {
+            // TODO: Draw other types of shapes
+        }
         
     }
 
-    
     Graphics::RenderFrame();
 }
 
