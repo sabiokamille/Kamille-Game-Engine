@@ -1,0 +1,37 @@
+#include "CollisionDetection.h"
+
+bool CollisionDetection::IsColliding(Body* a, Body* b, Contact& contact) {
+    bool aIsCircle = a->shape->GetType() == CIRCLE;
+    bool bIsCircle = b->shape->GetType() == CIRCLE;
+
+    if (aIsCircle && bIsCircle) {
+        return IsCollidingCircleCircle(a,b, contact);
+    } else {
+        // TO DO:  handle collision between other shapes
+    }
+}
+
+bool CollisionDetection::IsCollidingCircleCircle (Body* a, Body* b, Contact& contact) {
+    CircleShape* aCircleShape = (CircleShape*) a->shape;
+    CircleShape* bCircleShape = (CircleShape*) b->shape;
+
+    const Vec2 ab = a->position - b->position;
+    const float radiusSum = aCircleShape->radius + bCircleShape->radius;
+
+    bool isColliding = ab.MagnitudeSquared() < (radiusSum * radiusSum);
+
+    if(!isColliding) {
+        return false;
+    }
+
+    contact.a = a;
+    contact.b = b;
+
+    contact.normal = ab;
+    contact.normal.Normalize();
+
+    contact.pa = a->position - (contact.normal * aCircleShape->radius);
+    contact.pb = b->position + (contact.normal * bCircleShape->radius);
+    contact.depth = (contact.pa - contact.pb).Magnitude();
+    return true;
+}

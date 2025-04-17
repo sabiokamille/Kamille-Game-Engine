@@ -2,6 +2,8 @@
 #include "./Physics/Constants.h"
 #include "./Physics/Vec2.h"
 #include "./Physics/Force.h"
+#include "./Physics/CollisionDetection.h"
+#include "./Physics/Contact.h"
 #include <iostream>
 
 bool Application::IsRunning() {
@@ -18,8 +20,8 @@ void Application::Setup() {
     Body* smallBall = new Body(CircleShape(50),500, 500, 1.0);
     bodies.push_back(smallBall);
 
-    // Body* bigBall = new Body(Graphics::windowWidth - 500, 100, 3.0, 20);
-    // bodies.push_back(bigBall);
+    Body* bigBall = new Body(CircleShape(100), Graphics::windowWidth - 500, 100, 3.0);
+    bodies.push_back(bigBall);
 
     // for (int i = 1; i < 6; i++) {
     //     bodies.push_back(new Body(400 * i, 700, 1.0 * i, 15));
@@ -72,14 +74,11 @@ void Application::Input() {
                     pushForce.x = 0;
                 }
                 break;
-            case SDL_MOUSEBUTTONDOWN:
-                if (event.button.button == SDL_BUTTON_LEFT && event.button.state == SDL_PRESSED) {
-                    // std::cout << "x-coordinate: " << event.button.x << std::endl;
-                    // std::cout << "y-coordinate: " << event.button.y << std::endl;
-                    
-                    Body* newBody = new Body(CircleShape(50),event.button.x, event.button.y, 3.0);
-                    bodies.push_back(newBody);
-                }
+            case SDL_MOUSEMOTION:
+                int x,y;
+                SDL_GetMouseState(&x, &y);
+                bodies[1]->position.x = x;
+                bodies[1]->position.y = y;
         }
     }
 }
@@ -88,6 +87,9 @@ void Application::Input() {
 // Update function (called several times per second to update game objects)
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::Update() {
+    // Clear screen so that debug info can be drawn and shown on screen
+    Graphics::ClearScreen(0xFFA1D2E6);
+
     // Wait some time until we reach the target frame time in ms
     static int timePrevFrame;
     int waitTime = MILLISECS_PER_FRAME - (SDL_GetTicks() - timePrevFrame);
@@ -111,15 +113,15 @@ void Application::Update() {
         // }
 
         // Weight force
-        Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * Body->mass);
+        // Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * Body->mass);
         // Body->AddForce(weight);
 
         // Torque force
-        float torque = 20;
-        Body->AddTorque(torque);
+        // float torque = 20;
+        // Body->AddTorque(torque);
 
         // Push force
-        Body->AddForce(pushForce);
+        // Body->AddForce(pushForce);
 
         // Apply a friction force
         // Vec2 friction = Force::GenerateFrictionForce(*Body, 10.0 * PIXELS_PER_METER);
@@ -135,21 +137,32 @@ void Application::Update() {
         // }
     }
 
-    // //Apply gravitational attraction force
-    // Vec2 gravitationalAttractionForce = Force::GenerateAttractionForce(*bodies[0],*bodies[1], 1000.0 );
-    // bodies[0]->AddForce(gravitationalAttractionForce);
-    // bodies[1]->AddForce(-gravitationalAttractionForce);
-
-    // Apply a spring force to each Body
-    // for (int i = 1; i < bodies.size(); i++) {
-    //     Vec2 springForce = Force::GenerateSpringForce(*bodies[i], bodies[i-1]->position, 150, 10);
-    //      bodies[i]->AddForce(springForce);
-    //      bodies[i-1]->AddForce(-springForce);
-    // }
-
     // Integrate the acceleration and the velocity to find the new position
     for (auto Body : bodies) {
         Body->Update(deltaTime);
+    }
+
+    // Reset the collision flag for all the bodies
+    for (auto& Body : bodies) {
+        Body->isColliding = false;
+    }
+
+    // Check all the rigid bodies with the other rigid bodies for collision
+    for (int i = 0; i < bodies.size() - 1; i++) {
+        for (int j = i+1; j < bodies.size(); j++) {
+            Body* a = bodies[i];
+            Body* b = bodies[j];
+
+            Contact contact;
+            if(CollisionDetection::IsColliding(a, b, contact)){
+                // Resolve the collision using impulse method
+                Graphics::DrawFillCircle(contact.pa.x, contact.pa.y, 3, 0xFFFF00FF);
+                Graphics::DrawFillCircle(contact.pb.x, contact.pb.y, 3, 0xFFFF00FF);
+                Graphics::DrawLine(contact.pa.x,contact.pa.y,(contact.pa.x + contact.normal.x * 15), (contact.pa.y + contact.normal.y * 15), 0xFFFF00FF);
+                a->isColliding = true;
+                b->isColliding = true;
+            }
+        }
     }
 
     // TODO: Check the Body position and try to keep the Body inside the boundaries
@@ -179,16 +192,16 @@ void Application::Update() {
 // Render function (called several times per second to draw objects)
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
-    Graphics::ClearScreen(0xFFA1D2E6);
 
     // Draw the fluid in the screen
     // Graphics::DrawFillRect(fluid.x + fluid.w/2, fluid.y + fluid.h/2,fluid.w, fluid.h, 0xFF6E3712);
 
     //Draw each Body on the screen
     for( auto Body : bodies) {
+        Uint32 color = Body->isColliding? 0xFF0000FF : 0xFFFFFFFF;
         if (Body->shape->GetType() == CIRCLE) {
             CircleShape* circleShape = (CircleShape*) Body->shape;
-            Graphics::DrawCircle(Body->position.x,Body->position.y,circleShape->radius,Body->rotation, 0xFFFFFFFF);
+            Graphics::DrawCircle(Body->position.x,Body->position.y,circleShape->radius,Body->rotation, color);
         } else if (Body->shape->GetType() == BOX) {
             BoxShape* boxShape = (BoxShape*) Body->shape;
             Graphics::DrawPolygon(Body->position.x, Body->position.y, boxShape->worldVertices, 0xFFFFFFFF );

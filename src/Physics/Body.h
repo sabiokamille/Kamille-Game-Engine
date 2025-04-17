@@ -7,6 +7,9 @@
 
 // TODO:
 struct Body {
+    // Collision detection
+    bool isColliding;
+
     // Linear motion
     Vec2 position;
     Vec2 velocity;
@@ -32,6 +35,8 @@ struct Body {
 
     Body(const Shape& shape, float x, float y, float mass);
     ~Body();
+
+    bool IsStatic() const;
 
     void AddForce(const Vec2& force);
     void AddTorque(float torque);
