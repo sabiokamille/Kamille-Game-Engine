@@ -17,20 +17,20 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     // TODDO: make this safer? using maybe a shared pointer or sumn
-    Body* smallBall = new Body(CircleShape(50),500, 500, 1.0);
-    bodies.push_back(smallBall);
+    // Body* smallBall = new Body(CircleShape(50),500, 500, 1.0);
+    // bodies.push_back(smallBall);
 
-    Body* bigBall = new Body(CircleShape(100), Graphics::windowWidth - 500, 100, 3.0);
+    Body* bigBall = new Body(CircleShape(100), Graphics::windowWidth - Graphics::windowWidth/2, Graphics::windowHeight - Graphics::windowHeight/2, 0.0);
     bodies.push_back(bigBall);
 
     // for (int i = 1; i < 6; i++) {
     //     bodies.push_back(new Body(400 * i, 700, 1.0 * i, 15));
     // }
 
-    fluid.x = 0;
-    fluid.y = Graphics::Height() / 2;
-    fluid.w = Graphics::Width();
-    fluid.h = Graphics::Height()/2;
+    // fluid.x = 0;
+    // fluid.y = Graphics::Height() / 2;
+    // fluid.w = Graphics::Width();
+    // fluid.h = Graphics::Height()/2;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -74,11 +74,14 @@ void Application::Input() {
                     pushForce.x = 0;
                 }
                 break;
-            case SDL_MOUSEMOTION:
+            case SDL_MOUSEBUTTONDOWN:
                 int x,y;
                 SDL_GetMouseState(&x, &y);
-                bodies[1]->position.x = x;
-                bodies[1]->position.y = y;
+                Body* smallBall = new Body(CircleShape(50),500, 500, 1.0);
+                smallBall->position.x = x;
+                smallBall->position.y = y;
+                bodies.push_back(smallBall);
+                
         }
     }
 }
@@ -113,8 +116,8 @@ void Application::Update() {
         // }
 
         // Weight force
-        // Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * Body->mass);
-        // Body->AddForce(weight);
+        Vec2 weight = Vec2(0.0, 9.8 * PIXELS_PER_METER * Body->mass);
+        Body->AddForce(weight);
 
         // Torque force
         // float torque = 20;
@@ -142,23 +145,22 @@ void Application::Update() {
         Body->Update(deltaTime);
     }
 
-    // Reset the collision flag for all the bodies
-    for (auto& Body : bodies) {
-        Body->isColliding = false;
-    }
-
     // Check all the rigid bodies with the other rigid bodies for collision
     for (int i = 0; i < bodies.size() - 1; i++) {
         for (int j = i+1; j < bodies.size(); j++) {
             Body* a = bodies[i];
             Body* b = bodies[j];
+            a->isColliding = false;
+            b->isColliding = false;
 
             Contact contact;
             if(CollisionDetection::IsColliding(a, b, contact)){
                 // Resolve the collision using impulse method
-                Graphics::DrawFillCircle(contact.pa.x, contact.pa.y, 3, 0xFFFF00FF);
-                Graphics::DrawFillCircle(contact.pb.x, contact.pb.y, 3, 0xFFFF00FF);
-                Graphics::DrawLine(contact.pa.x,contact.pa.y,(contact.pa.x + contact.normal.x * 15), (contact.pa.y + contact.normal.y * 15), 0xFFFF00FF);
+                contact.ResolveCollision();
+
+                // Graphics::DrawFillCircle(contact.pa.x, contact.pa.y, 3, 0xFFFF00FF);
+                // Graphics::DrawFillCircle(contact.pb.x, contact.pb.y, 3, 0xFFFF00FF);
+                // Graphics::DrawLine(contact.pa.x,contact.pa.y,(contact.pa.x + contact.normal.x * 15), (contact.pa.y + contact.normal.y * 15), 0xFFFF00FF);
                 a->isColliding = true;
                 b->isColliding = true;
             }
@@ -201,7 +203,7 @@ void Application::Render() {
         Uint32 color = Body->isColliding? 0xFF0000FF : 0xFFFFFFFF;
         if (Body->shape->GetType() == CIRCLE) {
             CircleShape* circleShape = (CircleShape*) Body->shape;
-            Graphics::DrawCircle(Body->position.x,Body->position.y,circleShape->radius,Body->rotation, color);
+            Graphics::DrawFillCircle(Body->position.x,Body->position.y,circleShape->radius, color);
         } else if (Body->shape->GetType() == BOX) {
             BoxShape* boxShape = (BoxShape*) Body->shape;
             Graphics::DrawPolygon(Body->position.x, Body->position.y, boxShape->worldVertices, 0xFFFFFFFF );

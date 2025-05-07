@@ -30,6 +30,12 @@ struct Body {
     float I;
     float invI;
 
+    // Coefficient of restitution
+    float restitution;
+
+    // Impulse
+    void ApplyImpulse(const Vec2& jn);
+
     // A pointer to the geometry/shape of the rigid body (circle, box, polygon, etc)
     Shape* shape = nullptr;
 

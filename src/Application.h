@@ -13,7 +13,7 @@ class Application {
         Vec2 pushForce = Vec2(0,0);
 
         // Create a fluid to put on screen
-        SDL_Rect fluid;
+        // SDL_Rect fluid;
 
     public:
         Application() = default;

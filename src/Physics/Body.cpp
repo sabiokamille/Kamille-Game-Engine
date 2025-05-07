@@ -12,6 +12,7 @@ Body::Body(const Shape& shape, float x, float y, float mass) {
     this->angularVelocity = 0.0;
     this->sumForces = Vec2(0,0);
     this->sumTorque = 0.0;
+    this->restitution = 1.0;
     this->mass = mass;
     if (mass != 0.0){
         this->invMass = 1.0 / mass;
@@ -19,10 +20,10 @@ Body::Body(const Shape& shape, float x, float y, float mass) {
         this->invMass = 0.0;
     }
     I = shape.GetMomentOfInertia() * mass;
-    if (I != 0) {
+    if (I != 0.0) {
         invI = 1.0/ I;
     } else {
-        invI = I;
+        invI = 0.0;
     }
 
     std::cout << "Body constructor called!" << std::endl;
@@ -88,6 +89,14 @@ void Body::IntegrateAngular(float dt) {
 
     // Clear all the torque acting on the object
     ClearTorque();
+}
+
+void Body::ApplyImpulse(const Vec2& jn) {
+    if (IsStatic()) {
+        return;
+    }
+    velocity += jn * invMass;
+    std::cout << "Impulse applied" << std::endl;
 }
 
 void Body::Update(float dt) {
